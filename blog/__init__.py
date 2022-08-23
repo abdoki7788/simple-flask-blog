@@ -1,11 +1,11 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='',
+        SECRET_KEY='a430f7c71eba782cbf4d9c434df76a6850cb9d7322f14598495b995c0d53e21e',
         DATABASE=os.path.join(app.instance_path, 'blog.sqlite')
     )
     if test_config is None:
@@ -20,9 +20,9 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    @app.route('/')
+    def index():
+        return render_template('index.html')
     
     from . import auth
     app.register_blueprint(auth.bp)
