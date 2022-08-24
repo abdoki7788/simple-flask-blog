@@ -6,7 +6,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='a430f7c71eba782cbf4d9c434df76a6850cb9d7322f14598495b995c0d53e21e',
-        DATABASE=os.path.join(app.instance_path, 'blog.sqlite')
+        SQLALCHEMY_DATABASE_URI='sqlite:///blog.db',
     )
     if test_config is None:
         app.config.from_pyfile('config.py', silent=True)
@@ -17,8 +17,6 @@ def create_app(test_config=None):
     except OSError:
         pass
     
-    from . import db
-    db.init_app(app)
     
     from . import posts
     from . import auth
@@ -30,5 +28,9 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    from blog.db import db
+    db.init_app(app)
+    db.create_all(app=app)
 
     return app
