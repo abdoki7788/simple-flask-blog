@@ -7,6 +7,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='a430f7c71eba782cbf4d9c434df76a6850cb9d7322f14598495b995c0d53e21e',
         SQLALCHEMY_DATABASE_URI='sqlite:///../database.db',
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
     if test_config is None:
         app.config.from_pyfile('config.py', silent=True)
