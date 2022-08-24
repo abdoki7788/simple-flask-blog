@@ -1,6 +1,7 @@
 import pytest
 from flask import g, session
-from blog.db import get_db
+from blog.db import db
+from blog.models import User
 
 
 def test_register(client, app):
@@ -11,9 +12,7 @@ def test_register(client, app):
     assert response.headers["Location"] == "/auth/login"
 
     with app.app_context():
-        assert get_db().execute(
-            "SELECT * FROM user WHERE username = 'a'",
-        ).fetchone() is not None
+        assert User.query.filter_by(username='a').first() is not None
 
 
 @pytest.mark.parametrize(('username', 'password', 'message'), (
@@ -36,7 +35,7 @@ def test_login(client, auth):
     with client:
         client.get('/')
         assert session['user_id'] == 1
-        assert g.user['username'] == 'test'
+        assert g.user.username == 'test'
 
 
 @pytest.mark.parametrize(('username', 'password', 'message'), (

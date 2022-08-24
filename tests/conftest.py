@@ -1,12 +1,6 @@
-import os
-import tempfile
-
 import pytest
 from blog import create_app
-from blog.db import get_db, init_db
-
-with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
-    _data_sql = f.read().decode('utf8')
+from blog.db import db
 
 
 class AuthActions(object):
@@ -24,21 +18,29 @@ class AuthActions(object):
 
 @pytest.fixture
 def app():
-    db_fd, db_path = tempfile.mkstemp()
-
     app = create_app({
         'TESTING': True,
-        'DATABASE': db_path,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
     })
 
     with app.app_context():
-        init_db()
-        get_db().executescript(_data_sql)
+        db.engine.execute(
+            """
+            INSERT INTO user (username, password)
+            VALUES
+            ('test', 'pbkdf2:sha256:50000$TCI4GzcX$0de171a4f4dac32e3364c7ddc7c14f3e2fa61f2d17574483f7ffbb431b4acb2f'),
+            ('other', 'pbkdf2:sha256:50000$kJPKsz6N$d2d4784f1b030a9761f5ccaeeaca413f27f2ecb76d6168407af962ddce849f79');
+            """
+        )
+        db.engine.execute(
+            """
+            INSERT INTO post (title, body, author_id, created)
+            VALUES
+            ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00');
+            """
+        )
 
     yield app
-
-    os.close(db_fd)
-    os.unlink(db_path)
 
 
 @pytest.fixture

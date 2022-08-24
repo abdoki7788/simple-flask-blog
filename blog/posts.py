@@ -23,7 +23,6 @@ def get_post(id, check_author=True):
 @bp.route('/')
 def index():
     posts = Post.query.all()
-    print(posts)
     return render_template('blog/index.html', posts=posts)
 
 
