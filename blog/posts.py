@@ -15,7 +15,7 @@ def get_post(id, check_author=True):
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
-    if check_author and post.author_id != g.user.id:
+    if check_author and (g.user is None or post.author_id != g.user.id):
         abort(403)
 
     return post
@@ -24,6 +24,11 @@ def get_post(id, check_author=True):
 def index():
     posts = Post.query.all()
     return render_template('blog/index.html', posts=posts)
+
+@bp.route('/<int:id>')
+def detail(id):
+    post = get_post(id, check_author=False)
+    return render_template('blog/detail.html', post=post)
 
 
 @bp.route('/create', methods=('GET', 'POST'))

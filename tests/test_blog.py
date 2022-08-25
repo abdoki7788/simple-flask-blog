@@ -65,6 +65,14 @@ def test_update(client, auth, app):
         post = Post.query.filter_by(id=1).first()
         assert post.title == 'updated'
 
+def test_detail(client, app):
+    response = client.get('/1')
+    assert response.status_code == 200
+
+    with app.app_context():
+        post = Post.query.filter_by(id=1).first()
+        assert post.title in str(response.data)
+
 @pytest.mark.parametrize('path', (
     '/create',
     '/1/update',
