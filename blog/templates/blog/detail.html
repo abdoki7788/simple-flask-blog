@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock head %}
+
 {% block content %}
 <article class="post">
     <header>
@@ -11,5 +16,31 @@
         {% endif %}
     </header>
     <p class="body">{{ post['body'] }}</p>
+    <div id="like" onclick="like()">
+        <i class="fa-solid fa-thumbs-up" id="like_button" style="font-size: 2rem;{% if isLiked %}color: blue;{% endif %}"></i>
+        <span id="likes_count">{{ like_count }}</span>
+    </div>
 </article>
 {% endblock content %}
+
+{% block script %}
+<script>
+    async function set_like_count(res) {
+        data = await res.text()
+        console.log(data)
+        document.getElementById("likes_count").innerHTML = data;
+        document.getElementById("like_button").style.color = "blue";
+    }
+    async function like() {
+        let response = await fetch("{{ url_for('posts.like_article', id=post['id']) }}", {
+            method: 'POST',
+        }).then(async response => {
+            if (response.status == 403) {
+                alert("you should login for like this article")
+            } else if (response.status == 200) {
+                set_like_count(response)
+            }
+        })
+    }
+</script>
+{% endblock script %}

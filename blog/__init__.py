@@ -30,8 +30,9 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    from blog.db import db
+    from blog.db import db, migrate
     db.init_app(app)
     db.create_all(app=app)
+    migrate.init_app(app, db)
 
     return app

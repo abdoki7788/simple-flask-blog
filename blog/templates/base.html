@@ -3,6 +3,7 @@
     <head>
         <title>{% block title %}{% endblock %} - Flaskr</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        {% block head %}{% endblock head %}
     </head>
     <body>
         <nav>
@@ -26,5 +27,6 @@
             {% endfor %}
             {% block content %}{% endblock %}
         </section>
+        {% block script %}{% endblock script %}
     </body>
 </html>

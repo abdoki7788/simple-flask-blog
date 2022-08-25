@@ -1,6 +1,13 @@
 from datetime import datetime
 from blog.db import db
 
+associate_post_likes = db.Table(
+    "post_likes",
+    db.metadata,
+    db.Column("post_id", db.ForeignKey("post.id"), nullable=True),
+    db.Column("user_id", db.ForeignKey("user.id"), nullable=True),
+)
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
@@ -16,3 +23,4 @@ class Post(db.Model):
     title = db.Column(db.String, nullable=False)
     body = db.Column(db.String, nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    like = db.relationship("User", secondary=associate_post_likes)

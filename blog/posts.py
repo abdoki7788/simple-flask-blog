@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, make_response
 )
 from werkzeug.exceptions import abort
 
@@ -28,7 +28,17 @@ def index():
 @bp.route('/<int:id>')
 def detail(id):
     post = get_post(id, check_author=False)
-    return render_template('blog/detail.html', post=post)
+    return render_template('blog/detail.html', post=post, like_count=len(post.like), isLiked=(g.user in post.like))
+
+@bp.post('/<int:id>/like')
+def like_article(id):
+    if g.user is None:
+        abort(403)
+    else:
+        post = get_post(id, check_author=False)
+        post.like.append(g.user)
+        db.session.commit()
+        return str(len(post.like))
 
 
 @bp.route('/create', methods=('GET', 'POST'))
