@@ -40,6 +40,19 @@ def like_article(id):
         db.session.commit()
         return str(len(post.like))
 
+@bp.post('/<int:id>/dislike')
+def dislike_article(id):
+    if g.user is None:
+        abort(403)
+    else:
+        post = get_post(id, check_author=False)
+        if g.user in post.like:
+            post.like.remove(g.user)
+        else:
+            abort(400)
+        db.session.commit()
+        return str(len(post.like))
+
 
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required

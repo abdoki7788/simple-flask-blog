@@ -16,8 +16,8 @@
         {% endif %}
     </header>
     <p class="body">{{ post['body'] }}</p>
-    <div id="like" onclick="like()">
-        <i class="fa-solid fa-thumbs-up" id="like_button" style="font-size: 2rem;{% if isLiked %}color: blue;{% endif %}"></i>
+    <div id="like">
+        <i class="fa-solid fa-thumbs-up" id="like_button" style="font-size: 2rem;"></i>
         <span id="likes_count">{{ like_count }}</span>
     </div>
 </article>
@@ -25,22 +25,56 @@
 
 {% block script %}
 <script>
-    async function set_like_count(res) {
+    let isLiked = {{ isLiked|tojson }}
+
+    function changeButtonState() {
+        console.log(isLiked)
+        if (isLiked) {
+            btn.style.color = "blue"
+            btn.onclick = dislike
+        } else {
+            btn.style.color = "black"
+            btn.onclick = like
+        }
+    }
+
+    async function likeOperation(res) {
         data = await res.text()
-        console.log(data)
         document.getElementById("likes_count").innerHTML = data;
-        document.getElementById("like_button").style.color = "blue";
+        isLiked = true
+        changeButtonState()
+    }
+
+    async function dislikeOperation(res) {
+        data = await res.text()
+        document.getElementById("likes_count").innerHTML = data;
+        isLiked = false
+        changeButtonState()
     }
     async function like() {
         let response = await fetch("{{ url_for('posts.like_article', id=post['id']) }}", {
             method: 'POST',
         }).then(async response => {
             if (response.status == 403) {
-                alert("you should login for like this article")
+                alert("you should login for like this post")
             } else if (response.status == 200) {
-                set_like_count(response)
+                likeOperation(response)
             }
         })
     }
+    async function dislike() {
+        let response = await fetch("{{ url_for('posts.dislike_article', id=post['id']) }}", {
+            method: 'POST',
+        }).then(async response => {
+            if (response.status == 403) {
+                alert("you should login for dislike this post")
+            } else if (response.status == 200) {
+                dislikeOperation(response)
+            } else if (response.status == 400) {
+                alert("you not liked this post!")
+            }
+        })
+    }
+    changeButtonState()
 </script>
 {% endblock script %}
