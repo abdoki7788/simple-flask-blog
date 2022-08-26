@@ -36,7 +36,10 @@ def like_article(id):
         abort(403)
     else:
         post = get_post(id, check_author=False)
-        post.like.append(g.user)
+        if g.user not in post.like:
+            post.like.append(g.user)
+        else:
+            abort(400)
         db.session.commit()
         return str(len(post.like))
 

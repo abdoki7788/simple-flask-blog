@@ -1,6 +1,7 @@
 import pytest
 from blog.db import db
 from blog.models import Post
+from flask import g
 
 
 def test_index(client, auth):
@@ -90,3 +91,22 @@ def test_delete(client, auth, app):
     with app.app_context():
         post = Post.query.filter_by(id=1).first()
         assert post is None
+
+def test_like(client, auth, app):
+    response = client.post("/1/like")
+    article = client.get("/1")
+    assert response.status == "403 FORBIDDEN"
+    assert article.status == "200 OK"
+    assert b'<span id="likes_count">0</span>' in article.data
+    auth.login()
+    with client and app.app_context():
+        response = client.post("/1/like")
+        article = client.get("/1")
+        post = Post.query.filter_by(id=1).first()
+        assert g.user in post.like
+        assert response.status == "200 OK"
+        assert response.data == b"1"
+        assert article.status == "200 OK"
+        assert b'<span id="likes_count">1</span>' in article.data
+        response = client.post("/1/like")
+        assert response.status == "400 BAD REQUEST"
