@@ -28,7 +28,7 @@
     let isLiked = {{ isLiked|tojson }}
 
     function changeButtonState() {
-        console.log(isLiked)
+        btn = document.getElementById("like_button")
         if (isLiked) {
             btn.style.color = "blue"
             btn.onclick = dislike
