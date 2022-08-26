@@ -110,3 +110,25 @@ def test_like(client, auth, app):
         assert b'<span id="likes_count">1</span>' in article.data
         response = client.post("/1/like")
         assert response.status == "400 BAD REQUEST"
+
+def test_dislike(client, auth, app):
+    response = client.post("/1/dislike")
+    article = client.get("/1")
+    assert response.status == "403 FORBIDDEN"
+    assert article.status == "200 OK"
+    assert b'<span id="likes_count">0</span>' in article.data
+    auth.login()
+
+    response = client.post("/1/like")
+
+    with client and app.app_context():
+        response = client.post("/1/dislike")
+        article = client.get("/1")
+        post = Post.query.filter_by(id=1).first()
+        assert g.user not in post.like
+        assert response.status == "200 OK"
+        assert response.data == b"0"
+        assert article.status == "200 OK"
+        assert b'<span id="likes_count">0</span>' in article.data
+        response = client.post("/1/dislike")
+        assert response.status == "400 BAD REQUEST"
