@@ -31,8 +31,10 @@ def create_app(test_config=None):
         return 'Hello, World!'
 
     from blog.db import db, migrate
+    from blog.auth import login_manager
     db.init_app(app)
     db.create_all(app=app)
     migrate.init_app(app, db)
+    login_manager.init_app(app)
 
     return app

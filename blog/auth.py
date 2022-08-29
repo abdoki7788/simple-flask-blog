@@ -8,8 +8,19 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from blog.db import db
 from blog.models import User
+from blog.utils import is_safe_url
+
+from flask_login import LoginManager, login_user, login_required, logout_user
+
+
+login_manager = LoginManager()
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+@login_manager.user_loader
+def load_user(user_id):
+    user = User.query.get(user_id)
+    return user
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
@@ -52,9 +63,12 @@ def login():
             error = 'Incorrect password.'
 
         if error is None:
-            session.clear()
-            session['user_id'] = user.id
-            return redirect(url_for('index'))
+            login_user(user)
+            next = request.args.get('next')
+            if next and is_safe_url(next):
+                return redirect(next)
+            else:
+                return redirect(url_for('index'))
 
         flash(error)
 
@@ -62,24 +76,5 @@ def login():
 
 @bp.route('/logout')
 def logout():
-    session.clear()
+    logout_user()
     return redirect(url_for('index'))
-
-@bp.before_app_request
-def load_logged_in_user():
-    user_id = session.get('user_id')
-
-    if user_id is None:
-        g.user = None
-    else:
-        g.user = User.query.filter_by(id=user_id).first()
-
-def login_required(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for('auth.login'))
-
-        return view(**kwargs)
-
-    return wrapped_view

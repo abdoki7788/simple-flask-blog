@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from flask_login import UserMixin
 from blog.db import db
 
 associate_post_likes = db.Table(
@@ -8,7 +10,7 @@ associate_post_likes = db.Table(
     db.Column("user_id", db.ForeignKey("user.id"), nullable=True),
 )
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)

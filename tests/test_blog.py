@@ -1,7 +1,7 @@
+from flask_login import current_user
 import pytest
 from blog.db import db
-from blog.models import Post
-from flask import g
+from blog.models import Post, User
 
 
 def test_index(client, auth):
@@ -24,20 +24,17 @@ def test_index(client, auth):
 ))
 def test_login_required(client, path):
     response = client.post(path)
-    assert response.headers["Location"] == "/auth/login"
+    assert response.status == "401 UNAUTHORIZED"
 
 def test_author_required(app, client, auth):
-    # change the post author to another user
     with app.app_context():
         post = Post.query.filter_by(id=1).first()
         post.author_id = 2
         db.session.commit()
 
     auth.login()
-    # current user can't modify other user's post
     assert client.post('/1/update').status_code == 403
     assert client.post('/1/delete').status_code == 403
-    # current user doesn't see edit link
     assert b'href="/1/update"' not in client.get('/').data
 
 @pytest.mark.parametrize('path', (
@@ -95,40 +92,40 @@ def test_delete(client, auth, app):
 def test_like(client, auth, app):
     response = client.post("/1/like")
     article = client.get("/1")
-    assert response.status == "403 FORBIDDEN"
-    assert article.status == "200 OK"
+    assert response.status_code == 403
+    assert article.status_code == 200
     assert b'<span id="likes_count">0</span>' in article.data
     auth.login()
-    with client and app.app_context():
+
+    with client, app.app_context():
         response = client.post("/1/like")
         article = client.get("/1")
         post = Post.query.filter_by(id=1).first()
-        assert g.user in post.like
-        assert response.status == "200 OK"
+        assert User.query.filter_by(id=current_user.id).first() in post.like
+        assert response.status_code == 200
         assert response.data == b"1"
-        assert article.status == "200 OK"
+        assert article.status_code == 200
         assert b'<span id="likes_count">1</span>' in article.data
         response = client.post("/1/like")
-        assert response.status == "400 BAD REQUEST"
+        assert response.status_code == 400
 
 def test_dislike(client, auth, app):
     response = client.post("/1/dislike")
     article = client.get("/1")
-    assert response.status == "403 FORBIDDEN"
-    assert article.status == "200 OK"
+    assert response.status_code == 403
+    assert article.status_code == 200
     assert b'<span id="likes_count">0</span>' in article.data
     auth.login()
 
-    response = client.post("/1/like")
-
-    with client and app.app_context():
+    with client, app.app_context():
+        client.post("/1/like")
         response = client.post("/1/dislike")
         article = client.get("/1")
         post = Post.query.filter_by(id=1).first()
-        assert g.user not in post.like
-        assert response.status == "200 OK"
+        assert User.query.get(current_user.id) not in post.like
+        assert response.status_code == 200
         assert response.data == b"0"
-        assert article.status == "200 OK"
+        assert article.status_code == 200
         assert b'<span id="likes_count">0</span>' in article.data
         response = client.post("/1/dislike")
-        assert response.status == "400 BAD REQUEST"
+        assert response.status_code == 400

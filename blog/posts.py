@@ -1,10 +1,11 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, make_response
 )
+from flask_login import current_user
 from werkzeug.exceptions import abort
 
 from blog.auth import login_required
-from blog.models import Post
+from blog.models import Post, User
 from blog.db import db
 
 bp = Blueprint('posts', __name__)
@@ -15,7 +16,7 @@ def get_post(id, check_author=True):
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
-    if check_author and (g.user is None or post.author_id != g.user.id):
+    if check_author and (current_user is None or post.author_id != current_user.id):
         abort(403)
 
     return post
@@ -28,16 +29,16 @@ def index():
 @bp.route('/<int:id>')
 def detail(id):
     post = get_post(id, check_author=False)
-    return render_template('blog/detail.html', post=post, like_count=len(post.like), isLiked=(g.user in post.like))
+    return render_template('blog/detail.html', post=post, like_count=len(post.like), isLiked=(current_user in post.like))
 
 @bp.post('/<int:id>/like')
 def like_article(id):
-    if g.user is None:
+    if not current_user.is_authenticated:
         abort(403)
     else:
         post = get_post(id, check_author=False)
-        if g.user not in post.like:
-            post.like.append(g.user)
+        if User.query.get(current_user.id) not in post.like:
+            post.like.append(current_user)
         else:
             abort(400)
         db.session.commit()
@@ -45,12 +46,12 @@ def like_article(id):
 
 @bp.post('/<int:id>/dislike')
 def dislike_article(id):
-    if g.user is None:
+    if not current_user.is_authenticated:
         abort(403)
     else:
         post = get_post(id, check_author=False)
-        if g.user in post.like:
-            post.like.remove(g.user)
+        if User.query.get(current_user.id) in post.like:
+            post.like.remove(current_user)
         else:
             abort(400)
         db.session.commit()
@@ -71,7 +72,7 @@ def create():
         if error is not None:
             flash(error)
         else:
-            data = Post(title=title, body=body, author_id=g.user.id)
+            data = Post(title=title, body=body, author_id=current_user.id)
             db.session.add(data)
             db.session.commit()
             return redirect(url_for('posts.index'))
