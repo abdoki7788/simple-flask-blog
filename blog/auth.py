@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from blog.db import db
+from blog.forms import UserLoginForm, UserRegisterForm
 from blog.models import User
 from blog.utils import is_safe_url
 
@@ -24,37 +25,30 @@ def load_user(user_id):
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        error = None
-
-        if not username:
-            error = 'Username is required.'
-        elif not password:
-            error = 'Password is required.'
-
-        if error is None:
-            try:
-                data = User(username=username, password=generate_password_hash(password))
-                db.session.add(data)
-                db.session.commit()
-            except IntegrityError:
-                error = f"User {username} is already registered."
-            else:
-                return redirect(url_for("auth.login"))
+    form = UserRegisterForm()
+    if form.validate_on_submit():
+        username = form.data['username']
+        password = form.data['password']
+        try:
+            data = User(username=username, password=generate_password_hash(password))
+            db.session.add(data)
+            db.session.commit()
+        except IntegrityError:
+            error = f"User {username} is already registered."
+        else:
+            return redirect(url_for("auth.login"))
 
         flash(error)
-
-    return render_template('auth/register.html')
+    return render_template('auth/register.html', form=form)
 
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    form = UserLoginForm()
+    if form.validate_on_submit():
         error = None
+        username = form.data['username']
+        password = form.data['password']
         user = User.query.filter_by(username=username).first()
 
         if user is None:
@@ -72,7 +66,7 @@ def login():
 
         flash(error)
 
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', form=form)
 
 @bp.route('/logout')
 def logout():
