@@ -48,7 +48,7 @@ def test_exists_required(client, auth, path):
 def test_create(client, auth, app):
     auth.login()
     assert client.get('/create').status_code == 200
-    client.post('/create', data={'title': 'created', 'body': ''})
+    client.post('/create', data={'title': 'created', 'body': '...'})
 
     with app.app_context():
         count = db.session.query(Post).count()
@@ -57,7 +57,9 @@ def test_create(client, auth, app):
 def test_update(client, auth, app):
     auth.login()
     assert client.get('/1/update').status_code == 200
-    client.post('/1/update', data={'title': 'updated', 'body': ''})
+    res = client.post('/1/update', data={'title': 'updated', 'body': 'this is the body'})
+    print(res.data)
+
 
     with app.app_context():
         post = Post.query.filter_by(id=1).first()
@@ -78,7 +80,7 @@ def test_detail(client, app):
 def test_create_update_validate(client, auth, path):
     auth.login()
     response = client.post(path, data={'title': '', 'body': ''})
-    assert b'Title is required.' in response.data
+    assert b'This field is required.' in response.data
 
 def test_delete(client, auth, app):
     auth.login()
