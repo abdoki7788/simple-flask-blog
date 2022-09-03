@@ -20,6 +20,30 @@
         <i class="fa-solid fa-thumbs-up" id="like_button" style="font-size: 2rem;"></i>
         <span id="likes_count">{{ like_count }}</span>
     </div>
+    <div class="comments" style="margin-top: 5rem;">
+        <h2 style="color: blue;">comments</h2>
+        {% if current_user.is_authenticated %}
+            <form action="" method="post">
+                <h3>Create A Comment !</h3>
+                {{ form.csrf_token }}
+                {{ form.body.label }} {{ form.body() }}
+                <input type="submit" value="Submit">
+            </form>
+        {% endif %}
+        {% for comment in comments %}
+            <div>
+                <span><strong>{{ comment.author.username }}</strong></span>
+                {% if comment.author.id == current_user.id %}
+                <form action="{{ url_for("posts.delete_comment", id=post['id'], comment_id=comment.id) }}" method="post" style="display: inline;">
+                    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');" style="min-width: 3rem;">
+                </form>
+                {% endif %}
+                <p>
+                    {{ comment.body }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
 </article>
 {% endblock content %}
 

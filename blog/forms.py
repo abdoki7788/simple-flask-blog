@@ -5,7 +5,7 @@ from wtforms.widgets import TextArea
 
 class PostForm(FlaskForm):
     title = StringField('title', validators=[DataRequired()])
-    body = TextAreaField('body', validators=[DataRequired()], widget=TextArea())
+    body = TextAreaField('body', validators=[DataRequired()])
 
 class UserRegisterForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
@@ -15,3 +15,6 @@ class UserRegisterForm(FlaskForm):
 class UserLoginForm(FlaskForm):
     username = StringField('username', validators=[DataRequired()])
     password = StringField('password', validators=[DataRequired()])
+
+class CommentForm(FlaskForm):
+    body = TextAreaField('body', validators=[DataRequired()])

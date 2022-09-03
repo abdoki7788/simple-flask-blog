@@ -26,3 +26,12 @@ class Post(db.Model):
     body = db.Column(db.String, nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     like = db.relationship("User", secondary=associate_post_likes)
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    post = db.relationship('Post', backref='comments', lazy=True)
+    author = db.relationship('User', backref='comments', lazy=True)
+    body = db.Column(db.String, nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.now)
